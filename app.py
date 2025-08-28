@@ -286,25 +286,32 @@ def resolve_users_from_secrets() -> Dict[str, Dict[str, str]]:
 def login_panel():
     users = resolve_users_from_secrets()
     st.sidebar.markdown("### ログイン")
-    uname = st.sidebar.text_input("ユーザー名", value=st.session_state.get("user", ""))
-    pwd = st.sidebar.text_input("パスワード", type="password")
-    login = st.sidebar.button("ログイン")
-    if login:
-        if uname in users and str(pwd) == str(users[uname]["password"]):
-            st.session_state["user"] = uname
-            st.session_state["role"] = users[uname]["role"]
-            st.sidebar.success(f"{uname} としてログイン。ロール: {st.session_state['role']}")
-            log("login", f"user={uname}")
-        else:
-            st.sidebar.error("認証失敗。ユーザー名/パスワードをご確認ください。")
-
     if st.session_state.get("user"):
+        st.sidebar.markdown(
+            f"👤 **{st.session_state['user']}** (ロール: {st.session_state['role']})"
+        )
         if st.sidebar.button("ログアウト"):
             log("logout", st.session_state.get("user"))
             for k in ["user", "role"]:
                 if k in st.session_state:
                     del st.session_state[k]
             st.experimental_rerun()
+        st.sidebar.markdown("---")
+    else:
+        uname = st.sidebar.text_input("ユーザー名")
+        pwd = st.sidebar.text_input("パスワード", type="password")
+        if st.sidebar.button("ログイン"):
+            if uname in users and str(pwd) == str(users[uname]["password"]):
+                st.session_state["user"] = uname
+                st.session_state["role"] = users[uname]["role"]
+                st.sidebar.success(
+                    f"{uname} としてログイン。ロール: {st.session_state['role']}"
+                )
+                log("login", f"user={uname}")
+            else:
+                st.sidebar.error(
+                    "認証失敗。ユーザー名/パスワードをご確認ください。"
+                )
 
 
 def role_allows(page_key: str) -> bool:
@@ -945,7 +952,7 @@ def run_threshold_checks():
 # =============== メイン ===============
 
 def main():
-    st.set_page_config(page_title="EC収益管理", layout="wide")
+    st.set_page_config(page_title="EC収益管理", page_icon="🛍️", layout="wide")
     init_db()
 
     st.sidebar.title("EC収益管理（Streamlit）")
@@ -960,14 +967,14 @@ def main():
 
     # ページ選択（ロールに応じて制限）
     pages = [
-        ("dashboard", "ダッシュボード", page_dashboard),
-        ("import", "データ取込", page_import),
-        ("inventory", "在庫管理", page_inventory),
-        ("profit", "利益分析", page_profit),
-        ("returns", "返品・不良", page_returns),
-        ("rfm", "RFM/顧客", page_rfm),
-        ("settings", "設定", page_settings),
-        ("audit", "監査ログ", page_audit),
+        ("dashboard", "📊 ダッシュボード", page_dashboard),
+        ("import", "📥 データ取込", page_import),
+        ("inventory", "📦 在庫管理", page_inventory),
+        ("profit", "💹 利益分析", page_profit),
+        ("returns", "♻️ 返品・不良", page_returns),
+        ("rfm", "👥 RFM/顧客", page_rfm),
+        ("settings", "⚙️ 設定", page_settings),
+        ("audit", "📝 監査ログ", page_audit),
     ]
     avail = {k: v for k, v in ROLES.items()}  # 参照
     options = [label for key, label, _ in pages if role_allows(key)]
