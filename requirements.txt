@@ -1,0 +1,12 @@
+# 追加ファイル: requirements.txt
+# アプリ実行に必要なライブラリ一覧
+
+streamlit
+pandas
+numpy
+SQLAlchemy
+requests
+reportlab
+python-dateutil
+pytz
+openpyxl
