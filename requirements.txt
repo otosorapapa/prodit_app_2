@@ -10,3 +10,4 @@ reportlab
 python-dateutil
 pytz
 openpyxl
+pydeck

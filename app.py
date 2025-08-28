@@ -12,7 +12,7 @@ EC収益管理アプリ（楽天中小事業者向け） — Streamlit単一フ�
 - 7. 設計：Streamlit内完結（将来FastAPI分離可能な構造）
 
 ★ セットアップ（ローカル）
-pip install streamlit pandas numpy SQLAlchemy requests reportlab python-dateutil pytz openpyxl
+pip install streamlit pandas numpy SQLAlchemy requests reportlab python-dateutil pytz openpyxl pydeck
 # （任意）SQLCipher 暗号化利用時：pip install pysqlcipher3
 # 実行：streamlit run app.py
 
