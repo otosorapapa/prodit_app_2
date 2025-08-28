@@ -532,7 +532,7 @@ def forecast_sku_monthly(sales_df: pd.DataFrame, periods: int = 1) -> pd.DataFra
 @st.cache_data(show_spinner=False)
 def rfm_scores(date_ref: date) -> pd.DataFrame:
     eng = get_engine()
-    orders = pd.read_sql_table("orders", eng, parse_dates=["order_date"])  
+    orders = pd.read_sql_table("orders", eng, parse_dates=["order_date"])
     items = pd.read_sql_table("order_items", eng)
     df = items.merge(orders, on="order_id", how="inner")
     df["amount"] = df["unit_price"].astype(float) * df["qty"].astype(float)
@@ -542,11 +542,26 @@ def rfm_scores(date_ref: date) -> pd.DataFrame:
         monetary=("amount", "sum"),
     ).reset_index()
     agg["recency_days"] = (pd.to_datetime(date_ref) - agg["last_order"]).dt.days
-    # 五分位スコア（Rは小さいほど良い→逆順）
-    agg["R"] = pd.qcut(agg["recency_days"].rank(method="first", ascending=True), 5, labels=[5,4,3,2,1]).astype(int)
-    agg["F"] = pd.qcut(agg["freq"].rank(method="first", ascending=False), 5, labels=[5,4,3,2,1]).astype(int)
-    agg["M"] = pd.qcut(agg["monetary"].rank(method="first", ascending=False), 5, labels=[5,4,3,2,1]).astype(int)
-    agg["RFM"] = agg["R"].astype(str) + agg["F"].astype(str) + agg["M"].astype(str)
+    # 五分位スコア（少データ時は中央値固定）
+    def _score_series(s: pd.Series, ascending: bool) -> pd.Series:
+        if s.empty:
+            return pd.Series(dtype=int)
+        uniq = s.nunique()
+        if uniq < 2:
+            return pd.Series([3] * len(s), index=s.index, dtype=int)
+        q = min(5, uniq)
+        labels = list(range(q, 0, -1))
+        ranked = s.rank(method="first", ascending=ascending)
+        return pd.qcut(ranked, q, labels=labels).astype(int)
+
+    agg["R"] = _score_series(agg["recency_days"], ascending=True)
+    agg["F"] = _score_series(agg["freq"], ascending=False)
+    agg["M"] = _score_series(agg["monetary"], ascending=False)
+    agg["RFM"] = (
+        agg["R"].fillna(3).astype(int).astype(str)
+        + agg["F"].fillna(3).astype(int).astype(str)
+        + agg["M"].fillna(3).astype(int).astype(str)
+    )
     return agg
 
 # =============== 在庫/アラート ===============
