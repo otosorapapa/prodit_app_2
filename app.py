@@ -255,9 +255,9 @@ def df_to_csv_bytes(df: pd.DataFrame) -> bytes:
 
 # =============== 認証/権限 ===============
 ROLES = {
-    "admin": ["dashboard", "import", "inventory", "profit", "returns", "rfm", "settings", "audit"],
-    "executive": ["dashboard", "profit", "inventory", "rfm"],
-    "staff": ["dashboard", "import", "inventory", "returns", "profit"],
+    "admin": ["dashboard", "import", "inventory", "profit", "returns", "rfm", "wage", "settings", "audit"],
+    "executive": ["dashboard", "profit", "inventory", "rfm", "wage"],
+    "staff": ["dashboard", "import", "inventory", "returns", "profit", "wage"],
     "auditor": ["audit"],
 }
 
@@ -905,6 +905,22 @@ def page_rfm():
     st.download_button("CSV出力（上位セグ）", df_to_csv_bytes(seg), file_name="rfm_top.csv")
 
 
+def page_wage():
+    st.header("標準賃率計算")
+    with st.form("wage_form"):
+        basic = st.number_input("基本月額賃金", min_value=0.0, value=200000.0, step=1000.0)
+        allowance = st.number_input("諸手当（月額）", min_value=0.0, value=0.0, step=1000.0)
+        welfare_rate = st.number_input("福利厚生費率(%)", min_value=0.0, value=0.0, step=0.1)
+        work_days = st.number_input("月間稼働日数", min_value=1.0, value=20.0, step=1.0)
+        work_hours = st.number_input("1日あたり稼働時間", min_value=1.0, value=8.0, step=0.5)
+        sub = st.form_submit_button("計算")
+    if sub:
+        total_monthly = (basic + allowance) * (1 + welfare_rate / 100)
+        total_hours = work_days * work_hours
+        rate = total_monthly / total_hours if total_hours else 0
+        st.metric("標準賃率(円/時間)", f"{rate:,.2f}")
+
+
 def page_settings():
     st.header("設定 / プラグイン化 / 通知ルール")
     st.subheader("Slack/帳票/DB")
@@ -988,6 +1004,7 @@ def main():
         ("profit", "💹 利益分析", page_profit),
         ("returns", "♻️ 返品・不良", page_returns),
         ("rfm", "👥 RFM/顧客", page_rfm),
+        ("wage", "💰 標準賃率計算", page_wage),
         ("settings", "⚙️ 設定", page_settings),
         ("audit", "📝 監査ログ", page_audit),
     ]
